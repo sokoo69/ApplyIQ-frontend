@@ -31,4 +31,35 @@ export const applicationsApi = {
     
     return handleResponse(res);
   },
+
+  async getMyApplications(): Promise<Application[]> {
+    const res = await fetch(`${API_URL}/applications/me`, {
+      method: 'GET',
+      headers: defaultHeaders,
+      credentials: 'include',
+    });
+    
+    return handleResponse(res);
+  },
+
+  async updateApplicationStatus(id: string, status: string): Promise<Application> {
+    const res = await fetch(`${API_URL}/applications/${id}`, {
+      method: 'PATCH',
+      headers: defaultHeaders,
+      credentials: 'include',
+      body: JSON.stringify({ status }),
+    });
+    
+    return handleResponse(res);
+  },
+
+  async deleteApplication(id: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/applications/${id}`, {
+      method: 'DELETE',
+      headers: defaultHeaders,
+      credentials: 'include',
+    });
+    
+    return handleResponse(res);
+  },
 };
