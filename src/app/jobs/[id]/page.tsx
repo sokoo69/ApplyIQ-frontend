@@ -38,7 +38,7 @@ export default function JobDetailsPage({ params }: PageProps) {
   
   const { job, isLoading, isError } = useJob(id);
   const { user, isAuthenticated } = useAuth();
-  const { applications } = useMyApplications();
+  const { applications } = useMyApplications({ enabled: user?.role !== 'admin' });
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   const formatSalary = (min?: number, max?: number) => {
