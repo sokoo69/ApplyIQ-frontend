@@ -104,11 +104,11 @@ export default function JobDetailsPage({ params }: PageProps) {
     );
   }
 
-  if (!data) return null;
+  if (!data || !data.job) return null;
 
-  const { job, relatedJobs } = data;
-  const timeAgo = formatDistanceToNow(new Date(job.createdAt), { addSuffix: true });
-  const deadlineFormatted = format(new Date(job.deadline), 'MMM dd, yyyy');
+  const { job } = data;
+  const timeAgo = job.createdAt ? formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }) : '';
+  const deadlineFormatted = job.deadline ? format(new Date(job.deadline), 'MMM dd, yyyy') : 'No deadline';
 
   return (
     <div className="min-h-screen bg-[var(--color-neutral-bg)] py-12 px-4 sm:px-6 lg:px-8">
@@ -182,7 +182,7 @@ export default function JobDetailsPage({ params }: PageProps) {
                   <p className="text-xs text-gray-600">Our AI will compare your resume to this job description.</p>
                 </div>
               </div>
-              <Link href={`/ai/match?jobId=${job.id}`} className="w-full sm:w-auto">
+              <Link href={`/ai/match?jobId=${job._id || job.id}`} className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-colors">
                   Check My Match Score
                 </Button>
@@ -223,7 +223,7 @@ export default function JobDetailsPage({ params }: PageProps) {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">Job Type</p>
                   <Badge variant="default" className="capitalize">
-                    {job.jobType.replace('-', ' ')}
+                    {job.jobType ? job.jobType.replace('-', ' ') : 'Standard'}
                   </Badge>
                 </div>
                 <div>
@@ -245,18 +245,7 @@ export default function JobDetailsPage({ params }: PageProps) {
               </div>
             </Card>
 
-            {relatedJobs.length > 0 && (
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 font-[family-name:var(--font-heading)]">Similar Jobs</h3>
-                <div className="space-y-4">
-                  {relatedJobs.map((relatedJob) => (
-                    <JobCard key={relatedJob.id} job={relatedJob} />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-
         </div>
       </div>
     </div>

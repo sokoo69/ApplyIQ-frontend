@@ -24,11 +24,11 @@ export default function JobsPage() {
   const handleLocationChange = (val: string) => { setLocation(val); setPage(1); };
   const handleSortChange = (val: string) => { setSortBy(val); setPage(1); };
 
-  const { data: result, isLoading, isError } = useJobs({
-    searchQuery,
+  const { jobs, pagination, isLoading, isError } = useJobs({
+    search: searchQuery, // changed to match backend API query param 'search' instead of 'searchQuery'
     category,
     location,
-    sortBy,
+    sort: sortBy,
     page,
     limit
   });
@@ -80,9 +80,9 @@ export default function JobsPage() {
         )}
 
         {/* Success State */}
-        {!isLoading && !isError && result && (
+        {!isLoading && !isError && (
           <>
-            {result.data.length === 0 ? (
+            {jobs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border border-gray-200">
                 <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                   <Briefcase className="h-8 w-8 text-gray-400" />
@@ -97,14 +97,14 @@ export default function JobsPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                {result.data.map((job) => (
-                  <JobCard key={job.id} job={job} />
+                {jobs.map((job: any) => (
+                  <JobCard key={job._id || job.id} job={job} />
                 ))}
               </div>
             )}
 
             {/* Pagination */}
-            {result.meta.totalPages > 1 && (
+            {pagination.pages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">
                 <Button 
                   variant="outline" 
@@ -115,13 +115,13 @@ export default function JobsPage() {
                   Previous
                 </Button>
                 <span className="text-sm text-gray-600 px-4">
-                  Page {page} of {result.meta.totalPages}
+                  Page {page} of {pagination.pages}
                 </span>
                 <Button 
                   variant="outline"
                   size="sm"
-                  disabled={page === result.meta.totalPages}
-                  onClick={() => setPage(p => Math.min(result.meta.totalPages, p + 1))}
+                  disabled={page === pagination.pages}
+                  onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
                 >
                   Next
                 </Button>

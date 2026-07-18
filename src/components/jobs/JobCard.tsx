@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { MapPin, DollarSign, Clock } from 'lucide-react';
-import type { Job } from '@/lib/mockJobs';
 import { formatDistanceToNow } from 'date-fns';
 
 interface JobCardProps {
-  job: Job;
+  job: any;
 }
 
 export default function JobCard({ job }: JobCardProps) {
@@ -58,8 +57,8 @@ export default function JobCard({ job }: JobCardProps) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-3">
-          <Badge variant={getJobTypeColor(job.jobType)} className="capitalize text-[10px] px-2 py-0">
-            {job.jobType.replace('-', ' ')}
+          <Badge variant={getJobTypeColor(job.jobType || '')} className="capitalize text-[10px] px-2 py-0">
+            {job.jobType ? job.jobType.replace('-', ' ') : 'Standard'}
           </Badge>
           <Badge variant="outline" className="text-[10px] px-2 py-0">
             {job.category}
@@ -89,7 +88,7 @@ export default function JobCard({ job }: JobCardProps) {
       </CardContent>
       
       <CardFooter className="pt-0 mt-auto">
-        <Link href={`/jobs/${job.id}`} className="w-full">
+        <Link href={`/jobs/${job._id || job.id}`} className="w-full">
           <Button variant="outline" className="w-full text-sm">
             View Details
           </Button>

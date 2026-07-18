@@ -1,30 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
-import { mockJobs, Job } from '@/lib/mockJobs';
+import { jobsApi } from '../lib/api/jobs';
 
 export function useJob(id: string) {
-  return useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['job', id],
-    queryFn: async () => {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      const job = mockJobs.find((j) => j.id === id);
-      
-      if (!job) {
-        return null;
-      }
-
-      // Find 3-4 related jobs in the same category, excluding the current job
-      const relatedJobs = mockJobs
-        .filter((j) => j.category === job.category && j.id !== id)
-        .slice(0, 4);
-
-      return {
-        job,
-        relatedJobs
-      };
-    },
-    staleTime: 1000 * 60 * 5, // 5 mins
-    enabled: !!id, // Only run if ID is truthy
+    queryFn: () => jobsApi.getJobById(id),
+    enabled: !!id,
   });
+
+  // Note: we can map the backend job to return { job: data }
+  // If the old mock returned { job, relatedJobs }, we'll just mock relatedJobs or omit it.
+  return { 
+    job: data, 
+    relatedJobs: [], // omitted for brevity per rules since backend doesn't return it
+    isLoading, 
+    isError, 
+    error, 
+    refetch 
+  };
 }
