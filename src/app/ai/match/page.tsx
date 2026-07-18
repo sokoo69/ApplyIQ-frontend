@@ -146,19 +146,14 @@ function MatchScoreContent() {
         </div>
 
         {!hasResume && (
-          <div className="mb-8 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-amber-800">Resume Required</h3>
-              <p className="text-amber-700 text-sm mt-1">
-                You need to add your resume to your profile before you can calculate match scores.
-              </p>
-              <Link href="/profile" className="inline-block mt-3">
-                <Button size="sm" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none">
-                  Add Resume to Profile
-                </Button>
-              </Link>
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 flex items-start gap-4">
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-amber-900 mb-1">Resume Missing</h4>
+              <p className="text-xs text-amber-700">You need to add a resume to your profile before you can calculate match scores.</p>
             </div>
+            <Link href="/profile">
+              <Button size="sm" variant="secondary">Add Resume</Button>
+            </Link>
           </div>
         )}
 
@@ -176,7 +171,7 @@ function MatchScoreContent() {
         )}
 
         {isGenerating && (
-          <Card className="shadow-sm border-gray-200 min-h-[400px] flex flex-col items-center justify-center">
+          <Card className="min-h-[400px] flex flex-col items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-[var(--color-primary)] mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">Calculating Your Score</h3>
             <p className="text-gray-500 text-center max-w-md">
@@ -187,7 +182,7 @@ function MatchScoreContent() {
 
         {matchData && !isGenerating && (
           <div className="space-y-6">
-            <Card className="shadow-sm border-[var(--color-primary)] border-t-4">
+            <Card className="border-[var(--color-primary)] border-t-4">
               <CardContent className="pt-8 pb-8 px-6">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                   
@@ -233,7 +228,7 @@ function MatchScoreContent() {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-green-100">
+              <Card className="border-green-100">
                 <CardHeader className="border-b border-gray-50 bg-green-50/50 pb-4">
                   <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-green-500" /> Matching Skills
@@ -254,7 +249,7 @@ function MatchScoreContent() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border-amber-100">
+              <Card className="border-amber-100">
                 <CardHeader className="border-b border-gray-50 bg-amber-50/50 pb-4">
                   <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
                     <XCircle className="h-5 w-5 text-amber-500" /> Missing / Gap Skills
@@ -277,7 +272,7 @@ function MatchScoreContent() {
             </div>
 
             {/* Feedback Section */}
-            <Card className="shadow-sm border-gray-200 bg-gray-50 overflow-hidden">
+            <Card className="bg-gray-50 overflow-hidden">
               <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <h4 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -332,7 +327,7 @@ function MatchScoreContent() {
 
 export default function MatchScorePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[var(--color-neutral-bg)] flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--color-neutral-bg)] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>}>
       <MatchScoreContent />
     </Suspense>
   );

@@ -71,7 +71,7 @@ export default function AdminJobsPage() {
           </Button>
         </div>
 
-        <Card className="shadow-sm border-gray-200 overflow-hidden">
+        <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>

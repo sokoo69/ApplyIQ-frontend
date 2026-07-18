@@ -252,7 +252,7 @@ function InterviewCoachContent() {
               <h3 className="font-medium text-amber-800">Resume Required</h3>
               <p className="text-amber-700 text-sm mt-1">Add your resume to your profile first.</p>
               <Link href="/profile" className="inline-block mt-3">
-                <Button size="sm" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none">Add Resume</Button>
+                <Button size="sm" variant="secondary">Add Resume</Button>
               </Link>
             </div>
           </div>
@@ -265,7 +265,7 @@ function InterviewCoachContent() {
         )}
 
         {/* Chat Area */}
-        <Card className="flex-1 shadow-sm border-gray-200 flex flex-col overflow-hidden bg-white">
+        <Card className="flex-1 flex flex-col overflow-hidden">
           
           {!sessionId ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
@@ -384,7 +384,7 @@ function InterviewCoachContent() {
 
 export default function InterviewCoachPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[var(--color-neutral-bg)] flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--color-neutral-bg)] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>}>
       <InterviewCoachContent />
     </Suspense>
   );

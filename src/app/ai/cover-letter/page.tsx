@@ -95,7 +95,7 @@ export default function CoverLetterGeneratorPage() {
                 You need to add your resume to your profile before you can generate cover letters.
               </p>
               <Link href="/profile" className="inline-block mt-3">
-                <Button size="sm" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none">
+                <Button size="sm" variant="secondary">
                   Add Resume to Profile
                 </Button>
               </Link>
@@ -107,7 +107,7 @@ export default function CoverLetterGeneratorPage() {
           
           {/* Settings Panel */}
           <div className="lg:col-span-4">
-            <Card className="sticky top-24 shadow-sm border-gray-200">
+            <Card className="sticky top-24">
               <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
                 <CardTitle className="text-lg font-semibold text-gray-900">Settings</CardTitle>
               </CardHeader>
@@ -205,7 +205,7 @@ export default function CoverLetterGeneratorPage() {
 
           {/* Results Panel */}
           <div className="lg:col-span-8 flex flex-col">
-            <Card className="flex-1 shadow-sm border-gray-200 min-h-[500px] flex flex-col">
+            <Card className="flex-1 min-h-[500px] flex flex-col">
               <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <FileText className="h-5 w-5 text-gray-500" /> Output

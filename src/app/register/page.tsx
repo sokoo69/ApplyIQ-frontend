@@ -72,7 +72,7 @@ export default function RegisterPage() {
           <p className="mt-2 text-sm text-gray-600">Start optimizing your job applications today.</p>
         </div>
 
-        <Card className="shadow-lg border-gray-200">
+        <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               

@@ -183,7 +183,7 @@ export default function JobDetailsPage({ params }: PageProps) {
                 </div>
               </div>
               <Link href={`/ai/match?jobId=${job._id || job.id}`} className="w-full sm:w-auto">
-                <Button variant="outline" className="w-full border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-colors">
+                <Button variant="primary" className="w-full">
                   Check My Match Score
                 </Button>
               </Link>

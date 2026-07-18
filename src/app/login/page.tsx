@@ -71,7 +71,7 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-gray-600">Please enter your details to sign in.</p>
         </div>
 
-        <Card className="shadow-lg border-gray-200">
+        <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               
@@ -136,9 +136,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-[var(--color-primary)] hover:text-indigo-500">
+                  <button type="button" className="font-medium text-[var(--color-primary)] hover:text-indigo-500 bg-transparent border-none cursor-pointer p-0">
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
               </div>
 

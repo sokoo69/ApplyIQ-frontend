@@ -100,7 +100,7 @@ export default function AddItemPage() {
           Back to Pipeline
         </Link>
 
-        <Card className="shadow-sm border-gray-200">
+        <Card>
           <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-6">
             <CardTitle className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-heading)]">
               Track New Job Application

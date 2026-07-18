@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ApplyIQ Frontend
 
-## Getting Started
+The Next.js 14 frontend for ApplyIQ. It features a modern, responsive design built with Tailwind CSS, a custom design system ("Lumina"), and seamless integration with the backend API.
 
-First, run the development server:
+## Tech Stack
+- **Next.js 14**: React framework (App Router)
+- **TypeScript**: Static typing
+- **Tailwind CSS**: Utility-first CSS framework
+- **Recharts**: Data visualization for the dashboard
+- **Lucide React**: Icon library
+- **SWR / TanStack Query**: Data fetching hooks (custom hooks in `src/hooks`)
+- **Server-Sent Events (SSE)**: For real-time streaming of AI interview coach responses
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Local Setup
+
+### Environment Variables
+Create a `.env.local` file in the root of this project with the following variable:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ```
+*(This tells the frontend where the ApplyIQ Node.js backend is running).*
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application will run on `http://localhost:3000`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Architecture & Connection
+- **API Clients**: Found in `src/lib/api/`, these single-responsibility clients configure `fetch` with `credentials: 'include'` to ensure the backend's HttpOnly JWT cookie is transmitted securely.
+- **Hooks**: Custom hooks like `useAuth`, `useJobs`, and `useApplications` abstract the API layer and manage loading/error states.
+- **UI Kit**: Reusable components (`Card`, `Button`, `Badge`, `Skeleton`) are located in `src/components/ui/` and adhere strictly to the Lumina design tokens defined in `src/app/globals.css`.
+- **Protected Routes**: Pages requiring authentication use the `useAuth()` hook to check state and perform client-side redirects to `/login` if the user is unauthenticated.

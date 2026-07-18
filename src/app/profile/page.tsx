@@ -71,7 +71,7 @@ export default function ProfilePage() {
           My Profile
         </h1>
 
-        <Card className="shadow-sm border-gray-200">
+        <Card>
           <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-6">
             <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <UserIcon className="h-5 w-5 text-gray-500" /> Personal Information

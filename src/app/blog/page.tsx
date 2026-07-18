@@ -24,7 +24,7 @@ export default function BlogIndexPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {mockBlogPosts.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`} className="group h-full flex">
-              <Card className="h-full w-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-gray-200">
+              <Card className="h-full w-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                 <div className="relative h-48 w-full overflow-hidden bg-gray-200">
                   <img
                     src={post.coverImageUrl}
