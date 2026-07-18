@@ -44,8 +44,10 @@ export default function LoginPage() {
   };
 
   const handleDemoLogin = async () => {
+    setEmail('test@test.com');
+    setPassword('test1234');
     try {
-      await demoLogin();
+      await login({ email: 'test@test.com', password: 'test1234' });
       toast.success('Logged in with demo account!');
     } catch (err: any) {
       toast.error(err.message || 'Failed to login with demo account');
