@@ -245,8 +245,34 @@ export default function JobDetailsPage({ params }: PageProps) {
               </div>
             </Card>
 
-          </div>
         </div>
+        
+        {/* Related Jobs Section */}
+        <RelatedJobs category={job.category} currentJobId={job._id || job.id} />
+      </div>
+    </div>
+  );
+}
+
+function RelatedJobs({ category, currentJobId }: { category: string, currentJobId: string }) {
+  const { jobs, isLoading } = useJobs({ category, limit: 5 });
+  
+  if (isLoading) return null;
+  
+  // Filter out the current job and limit to 4
+  const relatedJobs = jobs
+    .filter((j: any) => (j._id || j.id) !== currentJobId)
+    .slice(0, 4);
+    
+  if (relatedJobs.length === 0) return null;
+  
+  return (
+    <div className="mt-16 border-t border-gray-200 pt-12">
+      <h2 className="text-2xl font-bold text-gray-900 mb-8 font-[family-name:var(--font-heading)]">Related Jobs</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {relatedJobs.map((job: any) => (
+          <JobCard key={job._id || job.id} job={job} />
+        ))}
       </div>
     </div>
   );
