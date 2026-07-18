@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { usersApi } from '@/lib/api/users';
+import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Loader2, Save, User as UserIcon, FileText, CheckCircle2 } from 'lucide-react';
+import { Loader2, Save, User as UserIcon, FileText, CheckCircle2, Upload } from 'lucide-react';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, isAuthenticated, isLoading } = useAuth();
   
   const [isSaving, setIsSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -34,8 +36,6 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     setIsSaving(true);
 
     try {
@@ -43,12 +43,39 @@ export default function ProfilePage() {
         name: formData.name,
         resumeText: formData.resumeText,
       });
-      setSuccessMsg('Profile updated successfully!');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      queryClient.invalidateQueries({ queryKey: ['authUser'] });
+      toast.success('Profile updated successfully!');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to update profile');
+      toast.error(err.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Only PDF files are allowed.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be under 5MB.');
+      return;
+    }
+
+    setIsExtracting(true);
+
+    try {
+      const data = await usersApi.uploadResumePdf(file);
+      setFormData(prev => ({ ...prev, resumeText: data.text }));
+      toast.success('Resume text extracted successfully. Please review before saving.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to extract text from PDF');
+    } finally {
+      setIsExtracting(false);
+      e.target.value = '';
     }
   };
 
@@ -80,17 +107,6 @@ export default function ProfilePage() {
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               
-              {errorMsg && (
-                <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm border border-red-200">
-                  {errorMsg}
-                </div>
-              )}
-              {successMsg && (
-                <div className="p-3 rounded-md bg-green-50 text-green-700 text-sm border border-green-200 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" /> {successMsg}
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
                   Full Name
@@ -119,23 +135,43 @@ export default function ProfilePage() {
                 <p className="mt-1 text-xs text-gray-500">Email cannot be changed.</p>
               </div>
 
-              <div className="pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-5 w-5 text-gray-500" />
-                  <h3 className="text-lg font-medium text-gray-900">Resume Content</h3>
+              {user?.role !== 'admin' && (
+                <div className="pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-gray-500" />
+                      <h3 className="text-lg font-medium text-gray-900">Resume Content</h3>
+                    </div>
+                    
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                        disabled={isExtracting}
+                        title="Upload Resume PDF"
+                      />
+                      <Button type="button" variant="outline" size="sm" className="gap-2 pointer-events-none">
+                        {isExtracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        {isExtracting ? 'Extracting...' : 'Upload PDF'}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-500 mb-4">
+                    Paste the text of your resume here or upload a PDF to auto-fill. This will be used by ApplyIQ's AI to generate tailored cover letters and match scores for jobs.
+                  </p>
+                  <textarea
+                    id="resumeText"
+                    rows={15}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent resize-y font-mono text-sm"
+                    placeholder="Experience&#10;Software Engineer at Tech Corp&#10;- Built web applications using React..."
+                    value={formData.resumeText}
+                    onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
+                  />
                 </div>
-                <p className="text-sm text-gray-500 mb-4">
-                  Paste the text of your resume here. This will be used by ApplyIQ's AI to generate tailored cover letters and match scores for jobs.
-                </p>
-                <textarea
-                  id="resumeText"
-                  rows={15}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent resize-y font-mono text-sm"
-                  placeholder="Experience&#10;Software Engineer at Tech Corp&#10;- Built web applications using React..."
-                  value={formData.resumeText}
-                  onChange={(e) => setFormData({ ...formData, resumeText: e.target.value })}
-                />
-              </div>
+              )}
 
               <div className="flex justify-end pt-4 border-t border-gray-100">
                 <Button 

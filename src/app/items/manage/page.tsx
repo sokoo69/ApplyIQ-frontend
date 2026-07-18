@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 
 export default function ManageItemsPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { applications, isLoading, updateStatus, deleteApplication } = useMyApplications();
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -24,10 +24,14 @@ export default function ManageItemsPage() {
   const [filterStatus, setFilterStatus] = useState<string>('All');
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      }
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -67,10 +71,10 @@ export default function ManageItemsPage() {
     ? applications 
     : applications.filter(a => a.status === filterStatus);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): "secondary" | "outline" | "default" | "accent" => {
     switch (status) {
       case 'Saved': return 'default';
-      case 'Applied': return 'primary';
+      case 'Applied': return 'default';
       case 'Interview': return 'accent';
       case 'Offer': return 'secondary';
       case 'Rejected': return 'outline';
@@ -140,8 +144,10 @@ export default function ManageItemsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredApps.map((app) => {
               // Handle mapped custom fields vs populated job fields
-              const title = app.title || (app.job as any)?.title || 'Unknown Title';
-              const company = (app.job as any)?.company || 'Custom Tracking';
+              const jobObj = app.job as any;
+              const hasPopulatedJob = typeof jobObj === 'object' && jobObj !== null;
+              const title = (hasPopulatedJob ? (jobObj.title || jobObj.jobTitle) : app.title) || 'Unknown Title';
+              const company = (hasPopulatedJob ? jobObj.company : 'Custom Tracking');
               const location = (app.job as any)?.location || 'Not specified';
               const logoUrl = app.imageUrl || (app.job as any)?.companyLogoUrl || `https://ui-avatars.com/api/?name=${company}&background=random&color=fff`;
               const isPublicJob = !!app.job;

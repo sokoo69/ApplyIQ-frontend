@@ -40,6 +40,20 @@ export default function Navbar() {
                   </Link>
                 </div>
               </>
+            ) : user?.role === 'admin' ? (
+              <>
+                <Link href="/admin/jobs" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Dashboard</Link>
+                <Link href="/jobs" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Jobs</Link>
+                <Link href="/admin/jobs" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Manage Jobs</Link>
+                <Link href="/admin/jobs" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Audit Log</Link>
+                
+                <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">
+                  <Link href="/profile" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Profile</Link>
+                  <Button variant="ghost" size="sm" onClick={() => logout()} disabled={isLoggingOut}>
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </Button>
+                </div>
+              </>
             ) : (
               <>
                 <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Dashboard</Link>
@@ -63,6 +77,7 @@ export default function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">
+                  <Link href="/profile" className="text-sm font-medium text-gray-700 hover:text-[var(--color-primary)]">Profile</Link>
                   <Button variant="ghost" size="sm" onClick={() => logout()} disabled={isLoggingOut}>
                     {isLoggingOut ? 'Logging out...' : 'Logout'}
                   </Button>
@@ -94,6 +109,21 @@ export default function Navbar() {
                 <Link href="/login" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Log in</Link>
                 <Link href="/register" className="block rounded-md px-3 py-2 text-base font-medium text-[var(--color-primary)] hover:bg-gray-50">Sign up</Link>
               </>
+            ) : user?.role === 'admin' ? (
+              <>
+                <Link href="/admin/jobs" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Dashboard</Link>
+                <Link href="/jobs" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Jobs</Link>
+                <Link href="/admin/jobs" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Manage Jobs</Link>
+                <Link href="/admin/jobs" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Audit Log</Link>
+                <Link href="/profile" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Profile</Link>
+                <button 
+                  className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-50"
+                  onClick={() => logout()}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? 'Logging out...' : 'Logout'}
+                </button>
+              </>
             ) : (
               <>
                 <Link href="/dashboard" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Dashboard</Link>
@@ -107,6 +137,7 @@ export default function Navbar() {
                     <Link href="/ai/interview-coach" className="block rounded-md py-2 text-sm font-medium text-gray-600 hover:text-[var(--color-primary)]">Interview Coach</Link>
                   </div>
                 </div>
+                <Link href="/profile" className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]">Profile</Link>
                 <button 
                   className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-50"
                   onClick={() => logout()}

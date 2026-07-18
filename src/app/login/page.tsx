@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, Github, Mail, Lock } from 'lucide-react'; // Fallback to generic icon if Google icon not readily available in lucide
+import { LogIn, Mail, Lock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,43 +15,61 @@ export default function LoginPage() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [formError, setFormError] = useState('');
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError('');
 
     if (!email || !password) {
-      setFormError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     try {
       await login({ email, password });
+      toast.success('Successfully logged in!');
     } catch (err: any) {
-      setFormError(err.message || 'Failed to login');
+      toast.error(err.message || 'Failed to login');
     }
   };
 
   const handleDemoLogin = async () => {
-    setFormError('');
     try {
       await demoLogin();
+      toast.success('Logged in with demo account!');
     } catch (err: any) {
-      setFormError(err.message || 'Failed to login with demo account');
+      toast.error(err.message || 'Failed to login with demo account');
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Redirects directly to backend route which initiates OAuth flow
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/auth/google`;
+  const handleGoogleLogin = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/auth/sign-in/social`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          provider: 'google', 
+          callbackURL: `${window.location.origin}/dashboard` 
+        })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      toast.error('Failed to initialize Google Login');
+    }
   };
 
   // Prevent flash of login form while checking auth
@@ -75,10 +94,9 @@ export default function LoginPage() {
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* Form Errors */}
-              {(formError || (loginError as any)?.message) && (
+              {(loginError as any)?.message && (
                 <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm mb-4 border border-red-200">
-                  {formError || (loginError as any)?.message}
+                  {(loginError as any)?.message}
                 </div>
               )}
 

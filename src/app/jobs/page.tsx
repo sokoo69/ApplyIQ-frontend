@@ -5,6 +5,7 @@ import { useJobs } from '@/hooks/useJobs';
 import JobFilters from '@/components/jobs/JobFilters';
 import JobSort from '@/components/jobs/JobSort';
 import JobCard from '@/components/jobs/JobCard';
+import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { Briefcase, XCircle } from 'lucide-react';
@@ -15,6 +16,7 @@ export default function JobsPage() {
   const [location, setLocation] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [page, setPage] = useState(1);
+  const { user, isAuthenticated } = useAuth();
 
   const limit = 8; // 8 cards per page (4 per row on desktop = 2 rows)
 
@@ -98,7 +100,7 @@ export default function JobsPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 {jobs.map((job: any) => (
-                  <JobCard key={job._id || job.id} job={job} />
+                  <JobCard key={job._id || job.id} job={job} userRole={isAuthenticated ? user?.role : null} />
                 ))}
               </div>
             )}

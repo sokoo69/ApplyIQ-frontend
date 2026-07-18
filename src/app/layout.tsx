@@ -4,6 +4,7 @@ import './globals.css';
 import QueryProvider from '@/providers/QueryProvider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -36,6 +37,16 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster 
+            position="bottom-right" 
+            toastOptions={{ 
+              style: { 
+                background: '#333', 
+                color: '#fff', 
+                borderRadius: '8px' 
+              } 
+            }} 
+          />
         </QueryProvider>
       </body>
     </html>

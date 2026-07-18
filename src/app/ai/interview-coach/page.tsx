@@ -29,6 +29,18 @@ function InterviewCoachContent() {
   
   const [isInitializing, setIsInitializing] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldownRemaining > 0) {
+      timer = setInterval(() => {
+        setCooldownRemaining(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
+
   const [errorMsg, setErrorMsg] = useState('');
   
   const [followUpPrompts, setFollowUpPrompts] = useState<string[]>([]);
@@ -40,10 +52,14 @@ function InterviewCoachContent() {
   const hasResume = !!user?.resumeText && user.resumeText.trim().length > 10;
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      }
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   // If a jobId is in the URL, try to map it to an application for the selector, or just use it directly
   useEffect(() => {
@@ -110,7 +126,7 @@ function InterviewCoachContent() {
     if (e) e.preventDefault();
     
     const contentToSend = predefinedContent || inputMessage;
-    if (!contentToSend.trim() || !sessionId || isStreaming) return;
+    if (!contentToSend.trim() || !sessionId || isStreaming || cooldownRemaining > 0) return;
 
     setInputMessage('');
     setFollowUpPrompts([]);
@@ -137,6 +153,12 @@ function InterviewCoachContent() {
         body: JSON.stringify({ content }),
       });
 
+      if (response.status === 429) {
+        const errData = await response.json().catch(() => ({}));
+        const resetTime = errData.resetAt ? new Date(errData.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'midnight';
+        throw new Error(`You have reached your daily limit of ${errData.limit || 30} interview coach messages. Your limit resets at ${resetTime} (UTC).`);
+      }
+
       if (!response.ok) {
         throw new Error('Failed to send message');
       }
@@ -160,19 +182,45 @@ function InterviewCoachContent() {
               
               if (data.error) {
                 console.error(data.error);
+                if (data.error === 'AI_RATE_LIMIT') {
+                  setMessages(prev => {
+                    const newMsgs = [...prev];
+                    newMsgs.pop(); // Remove the empty assistant message
+                    return newMsgs;
+                  });
+                  setCooldownRemaining(60);
+                  alert('AI service is temporarily busy due to free-tier limits. Please wait a minute and try again.');
+                }
                 break;
               }
               
               if (data.text) {
                 setMessages(prev => {
                   const newMsgs = [...prev];
-                  newMsgs[newMsgs.length - 1].content += data.text;
+                  const lastMsgIndex = newMsgs.length - 1;
+                  newMsgs[lastMsgIndex] = { 
+                    ...newMsgs[lastMsgIndex], 
+                    content: newMsgs[lastMsgIndex].content + data.text 
+                  };
                   return newMsgs;
                 });
               }
 
-              if (data.done && data.followUpPrompts) {
-                setFollowUpPrompts(data.followUpPrompts);
+              if (data.done) {
+                if (data.followUpPrompts) {
+                  setFollowUpPrompts(data.followUpPrompts);
+                }
+                if (data.finalCleanResponse) {
+                  setMessages(prev => {
+                    const newMsgs = [...prev];
+                    const lastMsgIndex = newMsgs.length - 1;
+                    newMsgs[lastMsgIndex] = {
+                      ...newMsgs[lastMsgIndex],
+                      content: data.finalCleanResponse
+                    };
+                    return newMsgs;
+                  });
+                }
               }
 
             } catch (e) {
@@ -183,7 +231,7 @@ function InterviewCoachContent() {
       }
     } catch (err: any) {
       console.error('Streaming error:', err);
-      // Could show a toast here
+      setErrorMsg(err.message || 'Failed to communicate with AI Coach.');
     } finally {
       setIsStreaming(false);
     }
@@ -214,20 +262,25 @@ function InterviewCoachContent() {
           </div>
           
           {!sessionId && (
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto relative">
               <select
                 className="flex-1 md:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 value={selectedAppId || urlJobId || ''}
                 onChange={(e) => setSelectedAppId(e.target.value)}
-                disabled={isAppsLoading || !hasResume}
+                disabled={isAppsLoading || !hasResume || applications.length === 0}
               >
                 <option value="" disabled>Select target job...</option>
                 {applications.map(app => {
-                  const title = app.title || (app.job as any)?.title || 'Unknown Role';
-                  const company = (app.job as any)?.company || 'Custom';
-                  return <option key={app._id} value={app._id}>{title} at {company}</option>;
+                  const jobObj = app.job as any;
+                  const isPublicJob = typeof jobObj === 'object' && jobObj !== null;
+                  const title = (isPublicJob ? (jobObj.title || jobObj.jobTitle) : app.title) || 'Unknown Role';
+                  const company = (isPublicJob ? jobObj.company : 'Custom');
+                  return <option key={app._id} value={app._id}>{title} {company && company !== 'Custom' ? `at ${company}` : ''}</option>;
                 })}
               </select>
+              {applications.length === 0 && !isAppsLoading && (
+                <p className="absolute -bottom-6 left-0 text-xs text-red-500">You must track at least one job first.</p>
+              )}
               <Button 
                 onClick={startSession} 
                 disabled={isInitializing || !hasResume || (!selectedAppId && !urlJobId)}
@@ -305,7 +358,7 @@ function InterviewCoachContent() {
                           : 'bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200/60'
                         }`}
                       >
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                        <div className="whitespace-pre-wrap">{msg.content.replace(/SUGGESTED_PROMPTS:[\s\S]*/, '').trim()}</div>
                       </div>
 
                       {isUser && (

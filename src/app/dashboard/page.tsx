@@ -19,7 +19,11 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Sparkles,
+  BotMessageSquare,
+  Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -27,19 +31,34 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [data, setData] = useState<any>(null);
+  const [gapsData, setGapsData] = useState<any>(null);
+  const [aiUsage, setAiUsage] = useState<any>(null);
+  const [deadlines, setDeadlines] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      }
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      dashboardApi.getSummary()
-        .then(res => {
-          setData(res);
+      Promise.all([
+        dashboardApi.getSummary(),
+        dashboardApi.getSkillGaps(),
+        dashboardApi.getAIUsage(),
+        dashboardApi.getUpcomingDeadlines(),
+      ])
+        .then(([summaryRes, gapsRes, aiRes, deadlinesRes]) => {
+          setData(summaryRes);
+          setGapsData(gapsRes);
+          setAiUsage(aiRes);
+          setDeadlines(deadlinesRes?.deadlines || []);
           setIsLoading(false);
         })
         .catch(err => {
@@ -153,14 +172,14 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* Stat Cards — 4 columns */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card className="border-l-4 border-l-indigo-500">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Total Tracked</p>
-                      <h3 className="text-3xl font-bold text-gray-900 mt-1">{data?.totalApplications}</h3>
+                      <h3 className="text-3xl font-bold text-gray-900 mt-1">{data?.totalApplications ?? '—'}</h3>
                     </div>
                     <div className="h-10 w-10 bg-indigo-50 rounded-full flex items-center justify-center">
                       <TrendingUp className="h-5 w-5 text-indigo-600" />
@@ -187,11 +206,36 @@ export default function DashboardPage() {
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Upcoming Deadlines</p>
-                      <h3 className="text-3xl font-bold text-gray-900 mt-1">{data?.upcomingDeadlinesCount || 0}</h3>
+                      <p className="text-sm font-medium text-gray-500">Deadlines (7 days)</p>
+                      <h3 className="text-3xl font-bold text-gray-900 mt-1">{deadlines.length}</h3>
                     </div>
                     <div className="h-10 w-10 bg-red-50 rounded-full flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-red-600" />
+                      <Calendar className="h-5 w-5 text-red-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* AI Usage Today card */}
+              <Card className="border-l-4 border-l-violet-500">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-500">AI Used Today</p>
+                      <h3 className="text-3xl font-bold text-gray-900 mt-1">
+                        {aiUsage ? `${aiUsage.totalUsed}/${aiUsage.totalLimit}` : '—'}
+                      </h3>
+                      {aiUsage && (
+                        <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className="h-1.5 rounded-full bg-violet-500 transition-all"
+                            style={{ width: `${Math.min((aiUsage.totalUsed / aiUsage.totalLimit) * 100, 100)}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-10 w-10 bg-violet-50 rounded-full flex items-center justify-center ml-3 flex-shrink-0">
+                      <BotMessageSquare className="h-5 w-5 text-violet-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -258,6 +302,75 @@ export default function DashboardPage() {
               </Card>
 
             </div>
+
+            {/* Skill Gaps Trend */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-lg">Your Most Common Skill Gaps</CardTitle>
+                {gapsData?.commentary && (
+                  <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-[var(--color-primary)]" />
+                    {gapsData.commentary}
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent className="h-80">
+                {gapsData?.gaps && gapsData.gaps.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={gapsData.gaps} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                      <YAxis dataKey="skill" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={100} />
+                      <Tooltip 
+                        cursor={{ fill: '#f1f5f9' }}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Bar dataKey="count" fill="var(--color-secondary)" radius={[0, 4, 4, 0]} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                    No skill gaps identified yet. Generate match scores to see this data!
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Deadlines Widget */}
+            {deadlines.length > 0 && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    Upcoming Deadlines
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-0 divide-y divide-gray-100">
+                    {deadlines.map((d: any, idx: number) => {
+                      const daysLeft = Math.ceil((new Date(d.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <div key={idx} className="py-3 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{d.title}</p>
+                            {d.company && <p className="text-xs text-gray-500">{d.company}</p>}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="text-xs capitalize">{d.status}</Badge>
+                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                              daysLeft <= 2 ? 'bg-red-100 text-red-700' :
+                              daysLeft <= 5 ? 'bg-amber-100 text-amber-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {daysLeft === 0 ? 'Today!' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Recent Activity */}
             <Card>

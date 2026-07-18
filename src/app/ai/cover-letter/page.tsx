@@ -25,12 +25,27 @@ export default function CoverLetterGeneratorPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [generatedLetter, setGeneratedLetter] = useState('');
   const [copied, setCopied] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.push('/login');
+    let timer: NodeJS.Timeout;
+    if (cooldownRemaining > 0) {
+      timer = setInterval(() => {
+        setCooldownRemaining(prev => prev - 1);
+      }, 1000);
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
+
+  useEffect(() => {
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      }
+    }
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +62,15 @@ export default function CoverLetterGeneratorPage() {
       const response = await aiApi.generateCoverLetter(formData);
       setGeneratedLetter(response.outputText);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to generate cover letter. Please try again.');
+      if (err.message === 'AI_RATE_LIMIT') {
+        setErrorMsg('AI service is temporarily busy due to free-tier limits. Please wait a minute and try again.');
+        setCooldownRemaining(60);
+      } else if (err.isRateLimit) {
+        const resetTime = new Date(err.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setErrorMsg(`You have reached your daily limit of ${err.limit} cover letters. Your limit resets at ${resetTime} (UTC).`);
+      } else {
+        setErrorMsg(err.message || 'Failed to generate cover letter. Please try again.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -134,11 +157,13 @@ export default function CoverLetterGeneratorPage() {
                     >
                       <option value="" disabled>Select a tracked application...</option>
                       {applications.map(app => {
-                        const title = app.title || (app.job as any)?.title || 'Unknown Role';
-                        const company = (app.job as any)?.company || 'Custom';
+                        const jobObj = app.job as any;
+                        const isPublicJob = typeof jobObj === 'object' && jobObj !== null;
+                        const title = (isPublicJob ? (jobObj.title || jobObj.jobTitle) : app.title) || 'Unknown Role';
+                        const company = (isPublicJob ? jobObj.company : 'Custom');
                         return (
                           <option key={app._id} value={app._id}>
-                            {title} at {company}
+                            {title} {company && company !== 'Custom' ? `at ${company}` : ''}
                           </option>
                         );
                       })}
@@ -184,17 +209,20 @@ export default function CoverLetterGeneratorPage() {
 
                   <Button 
                     type="submit" 
-                    variant="primary"
-                    className="w-full gap-2 mt-4"
-                    disabled={isGenerating || !hasResume || !formData.applicationId}
+                    className="w-full text-base font-medium py-6 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]"
+                    disabled={isGenerating || !hasResume || cooldownRemaining > 0}
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Generating...
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Generating...
                       </>
+                    ) : cooldownRemaining > 0 ? (
+                      `Wait ${cooldownRemaining}s to Retry`
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4" /> {generatedLetter ? 'Regenerate' : 'Generate'}
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Generate Cover Letter
                       </>
                     )}
                   </Button>
@@ -220,7 +248,7 @@ export default function CoverLetterGeneratorPage() {
               
               <CardContent className="flex-1 p-0 relative">
                 {isGenerating ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-10">
                     <Loader2 className="h-10 w-10 animate-spin text-[var(--color-primary)] mb-4" />
                     <p className="text-gray-600 font-medium animate-pulse">Analyzing your resume and the job description...</p>
                     <p className="text-sm text-gray-500 mt-2">Writing the perfect cover letter. This may take a few seconds.</p>

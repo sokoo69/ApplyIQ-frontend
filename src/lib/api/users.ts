@@ -28,4 +28,17 @@ export const usersApi = {
     });
     return handleResponse(res);
   },
+
+  async uploadResumePdf(file: File): Promise<{ text: string }> {
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    const res = await fetch(`${API_URL}/users/me/resume-upload`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    return handleResponse(res);
+  }
 };

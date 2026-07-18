@@ -17,24 +17,30 @@ async function handleResponse(response: Response) {
   }
   return response.json();
 }
-
 export const authApi = {
-  async register(data: any) {
-    const res = await fetch(`${API_URL}/auth/register`, {
+  async register(data: { email: string; password: string; name: string }) {
+    const res = await fetch(`${API_URL}/auth/sign-up/email`, {
       method: 'POST',
       headers: defaultHeaders,
-      credentials: 'omit', // Standard register doesn't need credentials in, but backend sets cookie out
-      body: JSON.stringify(data),
+      credentials: 'include', // Must include cookies for Better Auth CSRF protection
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      }),
     });
     return handleResponse(res);
   },
 
-  async login(data: any) {
-    const res = await fetch(`${API_URL}/auth/login`, {
+  async login(data: { email: string; password: string }) {
+    const res = await fetch(`${API_URL}/auth/sign-in/email`, {
       method: 'POST',
       headers: defaultHeaders,
-      credentials: 'omit',
-      body: JSON.stringify(data),
+      credentials: 'include', // Must include cookies for Better Auth session cookie
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+      }),
     });
     return handleResponse(res);
   },
@@ -43,16 +49,16 @@ export const authApi = {
     const res = await fetch(`${API_URL}/auth/demo-login`, {
       method: 'POST',
       headers: defaultHeaders,
-      credentials: 'omit',
+      credentials: 'include',
     });
     return handleResponse(res);
   },
 
   async logout() {
-    const res = await fetch(`${API_URL}/auth/logout`, {
+    const res = await fetch(`${API_URL}/auth/sign-out`, {
       method: 'POST',
       headers: defaultHeaders,
-      credentials: 'include', // Important to send cookie to clear it
+      credentials: 'include',
     });
     return handleResponse(res);
   },
@@ -61,7 +67,7 @@ export const authApi = {
     const res = await fetch(`${API_URL}/auth/me`, {
       method: 'GET',
       headers: defaultHeaders,
-      credentials: 'include', // Extremely important: sends the httpOnly cookie
+      credentials: 'include', // Sends the better-auth.session_token cookie
     });
     return handleResponse(res);
   },

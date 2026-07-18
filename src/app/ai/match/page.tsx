@@ -8,7 +8,7 @@ import { aiApi, MatchScorePayload } from '@/lib/api/ai';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Zap, AlertCircle, ArrowLeft, CheckCircle2, XCircle, Settings2, BarChart2 } from 'lucide-react';
+import { Loader2, Zap, AlertCircle, ArrowLeft, CheckCircle2, XCircle, Settings2, BarChart2, ChevronDown, ChevronUp } from 'lucide-react';
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 
 interface MatchData {
@@ -16,6 +16,7 @@ interface MatchData {
   matchingSkills: string[];
   missingSkills: string[];
   recommendation: string;
+  agentTrace?: any[];
 }
 
 function MatchScoreContent() {
@@ -30,16 +31,32 @@ function MatchScoreContent() {
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showTrace, setShowTrace] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
   
   const [feedbackState, setFeedbackState] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldownRemaining > 0) {
+      timer = setInterval(() => {
+        setCooldownRemaining(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
 
   const hasResume = !!user?.resumeText && user.resumeText.trim().length > 10;
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      }
     }
-  }, [isAuthLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   const fetchMatchScore = async (forcePriority?: MatchScorePayload['priority']) => {
     if (!jobId) {
@@ -61,7 +78,15 @@ function MatchScoreContent() {
       });
       setMatchData(result);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to generate match score. The AI might be temporarily unavailable.');
+      if (err.message === 'AI_RATE_LIMIT') {
+        setErrorMsg('AI service is temporarily busy due to free-tier limits. Please wait a minute and try again.');
+        setCooldownRemaining(60);
+      } else if (err.isRateLimit) {
+        const resetTime = new Date(err.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setErrorMsg(`You have reached your daily limit of ${err.limit} match scores. Your limit resets at ${resetTime} (UTC).`);
+      } else {
+        setErrorMsg(err.message || 'Failed to generate match score. The AI might be temporarily unavailable.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -130,23 +155,25 @@ function MatchScoreContent() {
             </p>
           </div>
           
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-md border border-gray-200 shadow-sm">
-            <Settings2 className="h-4 w-4 text-gray-400" />
-            <select
-              value={priority}
-              onChange={handlePriorityChange}
-              disabled={isGenerating || !hasResume}
-              className="text-sm font-medium text-gray-700 bg-transparent focus:outline-none border-none outline-none"
-            >
-              <option value="balanced">Balanced Priority</option>
-              <option value="prioritize_salary">Prioritize Seniority/Compensation</option>
-              <option value="prioritize_skills">Strict Technical Skills Overlap</option>
-            </select>
-          </div>
+          {jobId && (
+            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-md border border-gray-200 shadow-sm">
+              <Settings2 className="h-4 w-4 text-gray-400" />
+              <select
+                value={priority}
+                onChange={handlePriorityChange}
+                disabled={isGenerating || !hasResume}
+                className="text-sm font-medium text-gray-700 bg-transparent focus:outline-none border-none outline-none"
+              >
+                <option value="balanced">Balanced Priority</option>
+                <option value="prioritize_salary">Prioritize Seniority/Compensation</option>
+                <option value="prioritize_skills">Strict Technical Skills Overlap</option>
+              </select>
+            </div>
+          )}
         </div>
 
-        {!hasResume && (
-          <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 flex items-start gap-4">
+        {!hasResume && jobId && (
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 flex items-start gap-4 mb-8">
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-amber-900 mb-1">Resume Missing</h4>
               <p className="text-xs text-amber-700">You need to add a resume to your profile before you can calculate match scores.</p>
@@ -157,14 +184,33 @@ function MatchScoreContent() {
           </div>
         )}
 
+        {!jobId && (
+          <div className="mt-8 text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No Job Selected</h2>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              Please go to your Jobs or Applications page and click "View Match Score" for a specific role to see your detailed AI analysis.
+            </p>
+            <Link href="/jobs">
+              <Button>Browse Jobs</Button>
+            </Link>
+          </div>
+        )}
+
         {errorMsg && (
           <div className="mb-8 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-medium text-red-800">Error Generating Score</h3>
               <p className="text-red-700 text-sm mt-1">{errorMsg}</p>
-              <Button size="sm" variant="outline" className="mt-3 bg-white" onClick={() => fetchMatchScore()}>
-                Try Again
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="mt-3 bg-white" 
+                onClick={() => fetchMatchScore()}
+                disabled={cooldownRemaining > 0}
+              >
+                {cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s to Try Again` : 'Try Again'}
               </Button>
             </div>
           </div>
@@ -238,7 +284,7 @@ function MatchScoreContent() {
                   {matchData.matchingSkills.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {matchData.matchingSkills.map((skill, idx) => (
-                        <Badge key={idx} variant="primary" className="bg-green-100 text-green-800 border-green-200">
+                        <Badge key={idx} variant="default" className="bg-green-100 text-green-800 border-none hover:bg-green-200">
                           {skill}
                         </Badge>
                       ))}
@@ -270,6 +316,49 @@ function MatchScoreContent() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Agent Trace Section */}
+            {matchData.agentTrace && matchData.agentTrace.length > 0 && (
+              <Card className="border-gray-200">
+                <div 
+                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowTrace(!showTrace)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="h-5 w-5 text-gray-500" />
+                    <h3 className="font-semibold text-gray-900">See how this was calculated</h3>
+                  </div>
+                  {showTrace ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
+                </div>
+                {showTrace && (
+                  <CardContent className="pt-0 pb-4 px-4">
+                    <div className="border-t border-gray-100 pt-4 space-y-4">
+                      {matchData.agentTrace.map((step, idx) => (
+                        <div key={idx} className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="bg-[var(--color-primary)] text-white text-xs font-bold px-2 py-0.5 rounded">
+                              Step {idx + 1}
+                            </span>
+                            <h4 className="font-semibold text-gray-900">{step.stepName}</h4>
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-2">
+                            {step.stepName === 'Extract Skills' && (
+                              <p>Extracted <strong>{step.output.skills?.length || 0} skills</strong> and determined an experience level of <strong>{step.output.experienceLevel}</strong> ({step.output.yearsOfExperience} years) from your resume.</p>
+                            )}
+                            {step.stepName === 'Extract Requirements' && (
+                              <p>Identified <strong>{step.output.requiredSkills?.length || 0} required skills</strong>, <strong>{step.output.niceToHaveSkills?.length || 0} nice-to-have skills</strong>, and a required experience level of <strong>{step.output.requiredExperienceLevel}</strong> from the job description.</p>
+                            )}
+                            {step.stepName === 'Compare and Score' && (
+                              <p>Compared your profile against the job requirements, factoring in priority settings and your past feedback history, to produce the final <strong>{step.output.matchPercentage}%</strong> match score.</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            )}
 
             {/* Feedback Section */}
             <Card className="bg-gray-50 overflow-hidden">

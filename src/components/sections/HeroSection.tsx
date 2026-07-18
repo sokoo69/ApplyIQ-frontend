@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowRight, FileCheck, Sparkles, Target } from 'lucide-react';
 
+import { useAuth } from '@/hooks/useAuth';
+
 const matchStats = [
   { role: "Frontend Developer", score: 92, icon: <FileCheck className="h-5 w-5 text-[var(--color-secondary)]" /> },
   { role: "UX Designer", score: 85, icon: <Sparkles className="h-5 w-5 text-[var(--color-accent)]" /> },
@@ -15,6 +17,7 @@ const matchStats = [
 
 export default function HeroSection() {
   const [activeStat, setActiveStat] = useState(0);
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,6 +25,12 @@ export default function HeroSection() {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  const getMatchScoreLink = () => {
+    if (!isAuthenticated) return '/login';
+    if (user?.role === 'admin') return '/admin/jobs';
+    return '/ai/match';
+  };
 
   return (
     <section className="relative flex min-h-[70vh] flex-col items-center justify-center overflow-hidden bg-[var(--color-neutral-bg)] px-4 py-20 text-center sm:px-6 lg:px-8">
@@ -49,7 +58,7 @@ export default function HeroSection() {
               Explore Jobs <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/ai/match">
+          <Link href={getMatchScoreLink()}>
             <Button variant="outline" size="lg" className="w-full sm:w-auto">
               Try AI Match Score
             </Button>

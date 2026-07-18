@@ -13,14 +13,14 @@ export default function NewsletterSection() {
           Join thousands of job seekers who are applying smarter, not harder. Start tracking and optimizing today.
         </p>
         
-        <form className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
+        <form className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto w-full px-4" onSubmit={(e) => e.preventDefault()}>
           <input
             type="email"
             placeholder="Enter your email address"
-            className="w-full h-12 rounded-[var(--radius-base)] border border-gray-300 px-4 focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
+            className="w-full sm:flex-1 h-12 rounded-[var(--radius-base)] border border-gray-300 px-4 focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
             required
           />
-          <Button type="submit" size="lg" className="w-full sm:w-auto h-12">
+          <Button type="submit" size="lg" className="w-full sm:w-auto h-12 whitespace-nowrap flex-shrink-0">
             Get Started Free
           </Button>
         </form>

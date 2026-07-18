@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useAuth } from '@/hooks/useAuth';
 import { User, Mail, Lock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,43 +17,62 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [formError, setFormError] = useState('');
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      if (user?.role === 'admin') {
+        router.push('/admin/jobs');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError('');
 
     if (!name || !email || !password || !confirmPassword) {
-      setFormError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
     
     if (password.length < 8) {
-      setFormError('Password must be at least 8 characters long');
+      toast.error('Password must be at least 8 characters long');
       return;
     }
 
     if (password !== confirmPassword) {
-      setFormError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     try {
       await register({ name, email, password });
+      toast.success('Registration successful!');
     } catch (err: any) {
-      setFormError(err.message || 'Failed to register');
+      toast.error(err.message || 'Failed to register');
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/auth/google`;
+  const handleGoogleLogin = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/auth/sign-in/social`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          provider: 'google', 
+          callbackURL: `${window.location.origin}/dashboard` 
+        })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      toast.error('Failed to initialize Google Login');
+    }
   };
 
   if (isAuthenticated || user !== null) {
@@ -76,9 +96,9 @@ export default function RegisterPage() {
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {(formError || (registerError as any)?.message) && (
+              {(registerError as any)?.message && (
                 <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm mb-4 border border-red-200">
-                  {formError || (registerError as any)?.message}
+                  {(registerError as any)?.message}
                 </div>
               )}
 

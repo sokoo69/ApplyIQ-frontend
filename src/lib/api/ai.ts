@@ -7,13 +7,20 @@ const defaultHeaders = {
 async function handleResponse(response: Response) {
   if (!response.ok) {
     let errorMessage = 'An error occurred';
+    let errorData: any = null;
     try {
-      const errorData = await response.json();
+      errorData = await response.json();
       errorMessage = errorData.message || errorMessage;
     } catch {
       // Ignore if response is not JSON
     }
-    throw new Error(errorMessage);
+    const error: any = new Error(errorMessage);
+    if (response.status === 429 && errorData) {
+      error.isRateLimit = true;
+      error.resetAt = errorData.resetAt;
+      error.limit = errorData.limit;
+    }
+    throw error;
   }
   return response.json();
 }

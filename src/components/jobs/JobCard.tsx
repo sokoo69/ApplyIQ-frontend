@@ -8,20 +8,28 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface JobCardProps {
   job: any;
+  userRole?: string | null;
 }
 
-export default function JobCard({ job }: JobCardProps) {
+export default function JobCard({ job, userRole }: JobCardProps) {
   // Truncate description
   const truncatedDesc = job.description.length > 120 
     ? job.description.substring(0, 120) + '...'
     : job.description;
 
-  const timeAgo = formatDistanceToNow(new Date(job.createdAt), { addSuffix: true });
+  let timeAgo = 'Recently';
+  if (job.createdAt) {
+    const d = new Date(job.createdAt);
+    if (!isNaN(d.getTime())) {
+      timeAgo = formatDistanceToNow(d, { addSuffix: true });
+    }
+  }
 
-  const formatSalary = (min: number, max: number) => {
+  const formatSalary = (min?: number, max?: number) => {
+    if (min === undefined || max === undefined) return 'Salary not specified';
     const kMin = Math.round(min / 1000);
     const kMax = Math.round(max / 1000);
-    return `৳${kMin}k - ${kMax}k`;
+    return `৳${kMin}k - ${kMax}k/mo`;
   };
 
   const getJobTypeColor = (type: string) => {
@@ -39,14 +47,20 @@ export default function JobCard({ job }: JobCardProps) {
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 relative rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-              <Image 
-                src={job.companyLogoUrl} 
-                alt={`${job.company} logo`}
-                fill
-                className="object-cover"
-                unoptimized
-              />
+            <div className="h-10 w-10 relative rounded-md overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
+              {job.companyLogoUrl ? (
+                <Image 
+                  src={job.companyLogoUrl} 
+                  alt={`${job.company} logo`}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-gray-400 font-bold text-lg">
+                  {job.company?.charAt(0) || 'C'}
+                </span>
+              )}
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 leading-tight line-clamp-1 font-[family-name:var(--font-heading)]" title={job.title}>
@@ -74,7 +88,7 @@ export default function JobCard({ job }: JobCardProps) {
           </div>
           <div className="flex items-center text-xs text-gray-500 gap-1.5">
             <DollarSign className="h-3.5 w-3.5" />
-            <span>{formatSalary(job.salaryRange.min, job.salaryRange.max)}/mo</span>
+            <span>{formatSalary(job.salaryRange?.min, job.salaryRange?.max)}</span>
           </div>
           <div className="flex items-center text-xs text-gray-500 gap-1.5">
             <Clock className="h-3.5 w-3.5" />
@@ -87,12 +101,19 @@ export default function JobCard({ job }: JobCardProps) {
         </p>
       </CardContent>
       
-      <CardFooter className="pt-0 mt-auto">
+      <CardFooter className="pt-0 mt-auto flex gap-2">
         <Link href={`/jobs/${job._id || job.id}`} className="w-full">
           <Button variant="outline" className="w-full text-sm">
             View Details
           </Button>
         </Link>
+        {userRole === 'job_seeker' && (
+          <Link href={`/items/add?jobId=${job._id || job.id}`} className="w-full">
+            <Button variant="primary" className="w-full text-sm">
+              Save Job
+            </Button>
+          </Link>
+        )}
       </CardFooter>
     </Card>
   );

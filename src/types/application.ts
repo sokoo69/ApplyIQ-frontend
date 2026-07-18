@@ -1,9 +1,10 @@
 export interface CreateApplicationPayload {
-  title: string;
-  shortDescription: string;
-  fullDescription: string;
-  priority: 'Low' | 'Medium' | 'High';
-  deadline: string;
+  job?: string;
+  title?: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  priority?: 'Low' | 'Medium' | 'High';
+  deadline?: string;
   imageUrl?: string;
 }
 
@@ -13,11 +14,11 @@ export interface Application {
   job?: string; // Reference to Job if it exists
   
   // Custom fields for manually tracked applications based on requirements
-  title: string;
-  shortDescription: string;
-  fullDescription: string;
-  priority: 'Low' | 'Medium' | 'High';
-  deadline: string;
+  title?: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  priority?: 'Low' | 'Medium' | 'High';
+  deadline?: string;
   imageUrl?: string;
   
   // Standard Application fields from backend model
