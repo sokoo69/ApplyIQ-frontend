@@ -4,13 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAiDropdownOpen, setIsAiDropdownOpen] = useState(false);
   
-  // Static mock auth state for now
-  const isAuthenticated = false;
+  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
@@ -63,7 +63,9 @@ export default function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">
-                  <Button variant="ghost" size="sm">Logout</Button>
+                  <Button variant="ghost" size="sm" onClick={() => logout()} disabled={isLoggingOut}>
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </Button>
                 </div>
               </>
             )}
@@ -105,7 +107,13 @@ export default function Navbar() {
                     <Link href="/ai/interview-coach" className="block rounded-md py-2 text-sm font-medium text-gray-600 hover:text-[var(--color-primary)]">Interview Coach</Link>
                   </div>
                 </div>
-                <button className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-50">Logout</button>
+                <button 
+                  className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600 hover:bg-gray-50"
+                  onClick={() => logout()}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? 'Logging out...' : 'Logout'}
+                </button>
               </>
             )}
           </div>
