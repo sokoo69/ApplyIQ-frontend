@@ -24,9 +24,40 @@ export interface GenerateCoverLetterPayload {
   length: 'Short' | 'Medium' | 'Long';
 }
 
+export interface MatchScorePayload {
+  jobId: string;
+  priority?: 'balanced' | 'prioritize_salary' | 'prioritize_skills';
+}
+
+export interface MatchFeedbackPayload {
+  jobId: string;
+  signal: 'applied' | 'rejected' | 'not_interested' | 'saved';
+  matchScoreAtTime: number;
+}
+
 export const aiApi = {
   async generateCoverLetter(data: GenerateCoverLetterPayload): Promise<any> {
     const res = await fetch(`${API_URL}/ai/cover-letter`, {
+      method: 'POST',
+      headers: defaultHeaders,
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  async getMatchScore(data: MatchScorePayload): Promise<any> {
+    const res = await fetch(`${API_URL}/ai/match`, {
+      method: 'POST',
+      headers: defaultHeaders,
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  async recordMatchFeedback(data: MatchFeedbackPayload): Promise<any> {
+    const res = await fetch(`${API_URL}/ai/match/feedback`, {
       method: 'POST',
       headers: defaultHeaders,
       credentials: 'include',
