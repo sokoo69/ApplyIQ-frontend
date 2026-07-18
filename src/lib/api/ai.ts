@@ -65,4 +65,25 @@ export const aiApi = {
     });
     return handleResponse(res);
   },
+
+  async createChatSession(data: { applicationId?: string; jobId?: string }): Promise<any> {
+    const res = await fetch(`${API_URL}/ai/chat/sessions`, {
+      method: 'POST',
+      headers: defaultHeaders,
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  async getChatSession(sessionId: string): Promise<any> {
+    const res = await fetch(`${API_URL}/ai/chat/sessions/${sessionId}`, {
+      method: 'GET',
+      headers: defaultHeaders,
+      credentials: 'include',
+    });
+    return handleResponse(res);
+  },
+
+  // Note: sendMessage handles SSE and is implemented directly in the component
 };
