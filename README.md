@@ -12,7 +12,7 @@ Track applications, generate tailored cover letters, score your resume against a
 [![Groq](https://img.shields.io/badge/AI-Groq%20%2F%20Llama-orange)](https://groq.com/)
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 
-[🔗 **Live App**](https://apply-iq-frontend.vercel.app/) · [📦 Backend Repo](https://github.com/sokoo69/ApplyIQ-backend) · [🐛 Report Bug](#)
+[🔗 **Live App**](https://apply-iq-frontend.vercel.app/) · [📦 Backend Repo](https://github.com/sokoo69/ApplyIQ-backend) 
 
 </div>
 
@@ -124,19 +124,25 @@ Every restriction above is enforced **server-side** via role middleware — not 
 
 ---
 
-## 📌 Known Limitations
-
-See [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) for an honest list of current edge cases and scope boundaries.
-
-## 🏗️ Architecture Decisions
-
-See [`docs/ARCHITECTURE_DECISIONS.md`](docs/ARCHITECTURE_DECISIONS.md) for the reasoning behind key technical choices.
 
 ---
 
 ## 📄 License
 
 MIT
+
+---
+---
+
+## 👤 Author
+
+**Saykot Biswas Shawon**
+Full-Stack Developer · CSE Student, ULAB
+
+- 🌐 Portfolio: [saykot.dev](https://saykot.dev)
+- 💼 LinkedIn: [linkedin.com/in/your-actual-handle](https://linkedin.com/in/saykot-biswas-shawon/)
+- 🐙 GitHub: [github.com/sokoo69](https://github.com/sokoo69)
+- 📧 Email: shawon.saykot2023@gmail.com
 
 ---
 
