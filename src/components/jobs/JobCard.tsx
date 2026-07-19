@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { MapPin, DollarSign, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { applicationsApi } from '@/lib/api/applications';
+import { useMyApplications } from '@/hooks/useMyApplications';
 
 interface JobCardProps {
   job: any;
@@ -19,10 +20,19 @@ interface JobCardProps {
 export default function JobCard({ job, userRole }: JobCardProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSavedLocal, setIsSavedLocal] = useState(false);
+  
+  const { applications } = useMyApplications({ enabled: userRole === 'job_seeker' });
+
+  // Check if job is already saved in the user's applications
+  const isAlreadySaved = applications?.some(
+    (app: any) => app.job?._id === (job._id || job.id) || app.job === (job._id || job.id)
+  );
+  
+  const isSaved = isSavedLocal || isAlreadySaved;
 
   // Truncate description
-  const truncatedDesc = job.description.length > 120 
+  const truncatedDesc = job.description?.length > 120 
     ? job.description.substring(0, 120) + '...'
     : job.description;
 
@@ -61,10 +71,10 @@ export default function JobCard({ job, userRole }: JobCardProps) {
     setIsSaving(true);
     try {
       await applicationsApi.createApplication({ job: job._id || job.id });
-      setIsSaved(true);
+      setIsSavedLocal(true);
     } catch (err: any) {
       if (err.message?.includes("already tracking")) {
-         setIsSaved(true);
+         setIsSavedLocal(true);
       } else {
          alert(err.message || 'Failed to save job');
       }
