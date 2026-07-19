@@ -99,8 +99,8 @@ export default function JobsPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                {jobs.map((job: any) => (
-                  <JobCard key={job._id || job.id} job={job} userRole={isAuthenticated ? user?.role : null} />
+                {jobs.map((job: any, index: number) => (
+                  <JobCard key={job._id || job.id} job={job} userRole={isAuthenticated ? user?.role : null} isPriority={index < 4} />
                 ))}
               </div>
             )}

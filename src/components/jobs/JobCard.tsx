@@ -15,12 +15,14 @@ import { useMyApplications } from '@/hooks/useMyApplications';
 interface JobCardProps {
   job: any;
   userRole?: string | null;
+  isPriority?: boolean;
 }
 
-export default function JobCard({ job, userRole }: JobCardProps) {
+export default function JobCard({ job, userRole, isPriority = false }: JobCardProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [isSavedLocal, setIsSavedLocal] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const { applications } = useMyApplications({ enabled: userRole === 'job_seeker' });
 
@@ -89,13 +91,15 @@ export default function JobCard({ job, userRole }: JobCardProps) {
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 relative rounded-md overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
-              {job.companyLogoUrl ? (
+              {job.companyLogoUrl && !imageError ? (
                 <Image 
                   src={job.companyLogoUrl} 
                   alt={`${job.company} logo`}
                   fill
                   className="object-cover"
                   unoptimized
+                  priority={isPriority}
+                  onError={() => setImageError(true)}
                 />
               ) : (
                 <span className="text-gray-400 font-bold text-lg">
