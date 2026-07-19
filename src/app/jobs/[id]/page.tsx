@@ -351,11 +351,12 @@ export default function JobDetailsPage({ params }: PageProps) {
 
         </div>
         
+        </div>
+        
         {/* Related Jobs Section */}
         <RelatedJobs category={job.category} currentJobId={job._id || job.id} />
       </div>
     </div>
-  </div>
   );
 }
 

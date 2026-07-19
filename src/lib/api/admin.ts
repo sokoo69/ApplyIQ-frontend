@@ -50,8 +50,8 @@ export const adminApi = {
   },
 
   async updateJob(id: string, data: any): Promise<any> {
-    const res = await fetch(`${API_URL}/admin/jobs/${id}`, {
-      method: 'PUT', headers: defaultHeaders, credentials: 'include',
+    const res = await fetch(`${API_URL}/jobs/${id}`, {
+      method: 'PATCH', headers: defaultHeaders, credentials: 'include',
       body: JSON.stringify(data),
     });
     return handleResponse(res);
