@@ -1,10 +1,15 @@
+"use client";
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { MapPin, DollarSign, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { applicationsApi } from '@/lib/api/applications';
 
 interface JobCardProps {
   job: any;
@@ -12,6 +17,10 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, userRole }: JobCardProps) {
+  const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
   // Truncate description
   const truncatedDesc = job.description.length > 120 
     ? job.description.substring(0, 120) + '...'
@@ -39,6 +48,28 @@ export default function JobCard({ job, userRole }: JobCardProps) {
       case 'part-time': return 'outline';
       case 'contract': return 'secondary';
       default: return 'outline';
+    }
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!userRole) {
+      router.push('/login');
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      await applicationsApi.createApplication({ job: job._id || job.id });
+      setIsSaved(true);
+    } catch (err: any) {
+      if (err.message?.includes("already tracking")) {
+         setIsSaved(true);
+      } else {
+         alert(err.message || 'Failed to save job');
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -108,11 +139,14 @@ export default function JobCard({ job, userRole }: JobCardProps) {
           </Button>
         </Link>
         {userRole === 'job_seeker' && (
-          <Link href={`/items/add?jobId=${job._id || job.id}`} className="w-full">
-            <Button variant="primary" className="w-full text-sm">
-              Save Job
-            </Button>
-          </Link>
+          <Button 
+            variant={isSaved ? "outline" : "primary"} 
+            className={`w-full text-sm ${isSaved ? "text-green-600 border-green-200 bg-green-50" : ""}`}
+            onClick={handleSave}
+            disabled={isSaving || isSaved}
+          >
+            {isSaving ? "Saving..." : isSaved ? "Saved ✓" : "Save Job"}
+          </Button>
         )}
       </CardFooter>
     </Card>
