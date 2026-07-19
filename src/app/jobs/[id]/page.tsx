@@ -124,7 +124,7 @@ export default function JobDetailsPage({ params }: PageProps) {
 
   const getActionLink = (type: 'match' | 'manage') => {
     if (!isAuthenticated) return '/login';
-    if (type === 'manage') return `/my-applications`;
+    if (type === 'manage') return `/items/manage`;
     if (type === 'match') return `/ai/match?jobId=${job._id || job.id}`;
     return '#';
   };
